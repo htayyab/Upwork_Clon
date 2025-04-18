@@ -1,0 +1,57 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h2 class="h4 mb-0"><i class="bi bi-send me-2"></i>Submit Your Proposal</h2>
+        </div>
+        
+        <div class="card-body p-4">
+          <%= form_with model: [@job, @proposal], local: true, html: { multipart: true } do |f| %>
+            <div class="mb-4">
+              <%= f.label :offer_amount, "Your Offer", class: "form-label fw-bold" %>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-cash-coin"></i></span>
+                <%= f.number_field :offer_amount, step: 0.01, class: "form-control py-2", placeholder: "Enter amount" %>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <%= f.label :cover_letter, "Cover Letter", class: "form-label fw-bold" %>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-file-earmark-text"></i></span>
+                <%= f.text_area :cover_letter, class: "form-control py-2", rows: 6, placeholder: "Explain why you're the best candidate for this job..." %>
+              </div>
+              <div class="form-text mt-1"><i class="bi bi-info-circle me-1"></i>Minimum 100 characters</div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <%= f.label :estimated_time, "Estimated Timeframe", class: "form-label fw-bold" %>
+                <div class="input-group">
+                  <span class="input-group-text bg-light"><i class="bi bi-clock"></i></span>
+                  <%= f.text_field :estimated_time, class: "form-control py-2", placeholder: "e.g. 2 weeks" %>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <%= f.label :attachments, "Supporting Documents", class: "form-label fw-bold" %>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-paperclip"></i></span>
+                <%= f.file_field :attachments, multiple: true, class: "form-control py-2" %>
+              </div>
+              <div class="form-text"><i class="bi bi-file-earmark me-1"></i>Accepted formats: PDF, DOC, JPG, PNG (Max 5MB each)</div>
+            </div>
+
+            <div class="d-grid mt-4">
+              <%= f.submit "Submit Proposal", class: "btn btn-primary btn-lg py-3 fw-bold" %>
+                <i class="bi bi-send-check ms-2"></i>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

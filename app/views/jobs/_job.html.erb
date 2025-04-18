@@ -1,0 +1,73 @@
+<div id="<%= dom_id job %>" class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-sm mb-5">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0"><%= job.title %></h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <strong class="d-block text-muted small">Description</strong>
+              <p class="mb-0"><%= truncate(job.description, length: 150) %></p>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <strong class="d-block text-muted small">Budget</strong>
+                <span class="badge bg-success fs-6">
+                  <%= number_to_currency(job.budget, precision: 2) %>
+                </span>
+              </div>
+              <div class="mb-3">
+                <strong class="d-block text-muted small">Status</strong>
+                <span class="badge <%= status_badge_class(job.status) %>">
+                  <%= job.status.capitalize %>
+                </span>
+              </div>
+              <div class="mb-3">
+                <strong class="d-block text-muted small">Posted By</strong>
+                <%= job.user.first_name %>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <% if job.category.present? %>
+              <div class="col-md-6 mb-2">
+                <strong class="d-block text-muted small">Category</strong>
+                <span class="badge bg-secondary"><%= job.category.name %></span>
+              </div>
+            <% end %>
+
+            <% if job.skills.present? %>
+              <div class="col-md-6 mb-2">
+                <strong class="d-block text-muted small">Skills Required</strong>
+                <div class="mt-1">
+                  <% job.skills.each do |skill| %>
+                    <% cleaned = skill.strip.titleize %>
+                    <span class="badge bg-secondary me-1 mb-1"><%= cleaned %></span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <% if job.complexity.present? %>
+              <div class="col-md-6 mb-2">
+                <strong class="d-block text-muted small">Complexity</strong>
+                <span class="badge bg-warning text-dark"><%= job.complexity.titleize %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+          <small class="text-muted">
+            <i class="bi bi-clock-history me-1"></i>
+            <%= time_ago_in_words(job.created_at) %> ago
+          </small>
+          <%= link_to 'View Details', job_path(job), class: "btn btn-sm btn-outline-primary" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

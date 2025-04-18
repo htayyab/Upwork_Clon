@@ -1,0 +1,16 @@
+<% content_for :title, "Jobs" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="display-5 fw-bold text-primary">All Jobs</h1>
+  <% if current_user && current_user.client? %>
+    <%= link_to "New Job", new_job_path, class: "btn btn-primary" %>
+  <% end %>
+</div>
+
+<% if @jobs.any? %>
+  <% @jobs.each do |job| %>
+    <%= render job %> <!-- _job.html.erb partial handles the View button -->
+  <% end %>
+<% else %>
+  <p class="text-center my-5 text-muted">No jobs found.</p>
+<% end %>

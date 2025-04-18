@@ -1,0 +1,47 @@
+<div class="container mt-5">
+    <!-- Main welcome section -->
+    <% if current_user %> 
+      <div class="jumbotron text-center">
+        <h1 class="display-4">Welcome, <%= current_user.first_name %>!</h1>
+        <p class="lead">We're glad to have you here.</p>
+
+        <% if current_user.client? %>
+          <!-- If the user is a client, show the 'Create Job' link -->
+          <div class="my-4">
+            <%= link_to 'Create a Job',new_job_path, class: 'btn btn-primary btn-lg' %>
+          </div>
+          <div class="alert alert-info" role="alert">
+            As a client, you can post jobs and view proposals from freelancers.
+          </div>
+        <% elsif current_user.freelancer? %>
+          <!-- If the user is a freelancer, show a different message -->
+          <div class="my-4">
+            <%= link_to 'Browse Available Jobs',search_path, class: 'btn btn-primary btn-lg' %>
+          </div>
+          <div class="alert alert-warning" role="alert">
+            As a freelancer, you can apply to jobs posted by clients.
+          </div>
+        <% else %>
+          <!-- For normal users who don't have a defined role or are logged out -->
+          <div class="my-4">
+            <p class="alert alert-info" role="alert">
+              Welcome, you're logged in as a normal user. Please explore the platform.
+            </p>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <!-- If the user is not logged in -->
+      <div class="jumbotron text-center">
+        <h1 class="display-4">Welcome!</h1>
+        <p class="lead">Please log in to access your dashboard.</p>
+        <%= link_to 'Login', new_user_session_path, class: 'btn btn-primary btn-lg' %>
+      </div>
+    <% end %>
+
+    <!-- Additional content for the page -->
+    <div class="text-center mt-4">
+      <h3 class="mb-4">Latest Updates:</h3>
+      <p>Explore the platform to find great opportunities and start your projects!</p>
+    </div>
+  </div>

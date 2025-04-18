@@ -1,0 +1,2 @@
+module Freelancers::JobsHelper
+end

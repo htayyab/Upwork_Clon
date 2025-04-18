@@ -1,0 +1,89 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+  <div class="container">
+    <%= link_to 'Upwork', root_path, class: 'navbar-brand fw-bold text-success' %>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <% unless user_signed_in? %>
+          <li class="nav-item">
+            <%= link_to 'Find Talent', '#', class: 'nav-link' %>
+          </li>
+          <li class="nav-item">
+            <%= link_to 'Find Work', search_path , class: 'nav-link' %>
+          </li>
+        <% else %>
+          <% if current_user.freelancer? %>
+            <li class="nav-item">
+              <%= link_to 'Find Work', search_path, class: 'nav-link' %>
+            </li>
+            <li class="nav-item">
+              <%= link_to 'Check All Proposals you send', my_proposals_path	, class: 'nav-link' %>
+            </li>
+            <li class="nav-item">
+              <%= link_to 'My Accepted Jobs List', freelancer_accepted_jobs_path, class: 'nav-link' %>
+            </li>
+            
+          <% elsif current_user.client? %>
+            <li class="nav-item">
+              <%= link_to 'Find Talent', '#', class: 'nav-link' %>
+            </li>
+            <li class="nav-item">
+             <%= link_to 'View Proposals', client_proposals_proposals_path, class: 'nav-link' %>
+            </li>
+            <li class="nav-item">
+             <%= link_to 'Create Jobs', new_job_path, class: 'nav-link' %>
+            </li>
+            <li class="nav-item">
+              <%= link_to 'My Accepted Jobs', client_accepted_jobs_path, class: 'btn btn-primary' %>
+            </li>
+          <% else %>
+            <li class="nav-item">
+              <%= link_to 'Find Talent', '#', class: 'nav-link' %>
+            </li>
+            <li class="nav-item">
+              <%= link_to 'Find Work', search_path ,  class: 'nav-link' %>
+            </li>
+          <% end %>
+        <% end %>
+      </ul>
+      
+      <ul class="navbar-nav ms-auto">
+        <% if user_signed_in? %>
+          <% if current_user.freelancer? || current_user.client? %>
+            <li class="nav-item">
+              <span class="nav-link text-primary fw-bold">
+                Balance: <%= number_to_currency(current_user.balance) %>
+              </span>
+            </li>
+          <% end %>
+          
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Hi, <%= current_user.first_name %>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+              <li><%= link_to 'Dashboard', "#", class: 'dropdown-item' %></li>
+              <li><%= link_to 'Profile', "#", class: 'dropdown-item' %></li>
+              <li><%= link_to 'Settings', "#", class: 'dropdown-item' %></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <%= button_to 'Logout', logout_user_path, method: :delete, class: 'dropdown-item', form_class: 'd-inline' %>
+              </li>
+            </ul>
+          </li>
+        <% else %>
+          <li class="nav-item">
+            <%= link_to 'Login', login_user_path, class: 'nav-link' %>
+          </li>
+          <li class="nav-item">
+            <%= link_to 'Sign Up', registration_options_path, class: 'btn btn-success ms-2' %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</nav>

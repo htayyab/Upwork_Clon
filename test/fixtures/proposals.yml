@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  job: one
+  freelancer: one
+  offer_amount: 9.99
+  cover_letter: MyText
+  status: MyString
+  estimated_time: MyString
+  attachments: 
+
+two:
+  job: two
+  freelancer: two
+  offer_amount: 9.99
+  cover_letter: MyText
+  status: MyString
+  estimated_time: MyString
+  attachments: 

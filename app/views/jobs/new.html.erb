@@ -1,0 +1,17 @@
+<% content_for :title, "New Job" %>
+
+<div class="container mt-5">
+  <% if policy(Job).new? %>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="h3 mb-0 fw-bold">Create New Job</h1>
+      <%= link_to "Back to Jobs", jobs_path, class: "btn btn-outline-secondary" %>
+    </div>
+
+    <%= render "form", job: @job %>
+  <% else %>
+    <div class="alert alert-warning">
+      You don't have permission to create new jobs.
+    </div>
+    <%= link_to "Back to Jobs", jobs_path, class: "btn btn-primary" %>
+  <% end %>
+</div>

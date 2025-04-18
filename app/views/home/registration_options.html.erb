@@ -1,0 +1,61 @@
+<div class="container mt-5">
+  <h2 class="text-center mb-4 fw-semibold">Join as a Freelancer or Client</h2>
+
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+          <div class="form-check">
+            <input class="form-check-input"
+                   type="radio"
+                   name="role"
+                   id="client"
+                   value="client"
+                   <%= params[:role] != 'freelancer' ? 'checked' : '' %>>
+            <label class="form-check-label fw-bold fs-5" for="client">
+              Register as Client
+            </label>
+          </div>
+          <p class="mt-2 text-muted">Hire top freelancers for your project and get things done.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+          <div class="form-check">
+            <input class="form-check-input"
+                   type="radio"
+                   name="role"
+                   id="freelancer"
+                   value="freelancer"
+                   <%= params[:role] == 'freelancer' ? 'checked' : '' %>>
+            <label class="form-check-label fw-bold fs-5" for="freelancer">
+              Register as Freelancer
+            </label>
+          </div>
+          <p class="mt-2 text-muted">Find freelance work and grow your professional career.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <!-- Changed to button that will handle navigation -->
+    <button id="continue-btn" class="btn btn-primary">Register</button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const roleRadios = document.querySelectorAll('input[name="role"]');
+    const continueBtn = document.getElementById("continue-btn");
+    const baseUrl = "<%= signup_user_path %>";
+
+    continueBtn.addEventListener("click", () => {
+      const selectedRole = document.querySelector('input[name="role"]:checked').value;
+      window.location.href = `${baseUrl}?role=${selectedRole}`;
+    });
+  });
+</script>
