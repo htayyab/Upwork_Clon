@@ -9,20 +9,39 @@ class Proposal < ApplicationRecord
     rejected: 'rejected'
   }
   
-  # Validations
-  validates :user, presence: true
-  validates :status, presence: true
-  validates :job, presence: true
+  validates :user_id, :job_id,:status, :offer_amount, :cover_letter, :estimated_time, presence: true
+  validates :offer_amount, numericality: { greater_than: 0 }
+  validates :cover_letter, length: { minimum: 20, maximum: 200 }
+  validates :estimated_time, format: {
+    with: /\A\d+\s+(day|days|week|weeks|month|months|year|years)\z/i,
+    message: "must be in format like '1 week', '2 months', etc."
+  }
+  validate :user_is_freelancer
 
-  # Ensure only freelancers can be assigned
-  validate :user_must_be_freelancer
+  # === Business Logic ===
+
+  def accept!
+    return false unless pending?
+
+    transaction do
+      update!(status: :accepted, hold_amount: offer_amount)
+      job.update!(status: :closed)
+      job.user.decrement!(:balance, offer_amount)
+    end
+    true
+  rescue => e
+    Rails.logger.error("Proposal#accept! failed: #{e.message}")
+    false
+  end
+
+  def reject!
+    return false unless pending?
+    update(status: :rejected)
+  end
 
   private
-  
-  def user_must_be_freelancer
-    return unless user
-    unless user.freelancer?
-      errors.add(:user, "must be a freelancer")
-    end
+
+  def user_is_freelancer
+    errors.add(:user, "must be a freelancer") unless user&.freelancer?
   end
 end

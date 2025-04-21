@@ -1,9 +1,5 @@
 class HomeController < ApplicationController
-  def index
+  def index; end
 
-  end
-
-  def registration_options
-    
-  end
+  def registration_options; end
 end

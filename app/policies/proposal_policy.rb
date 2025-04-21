@@ -1,26 +1,19 @@
 class ProposalPolicy
   attr_reader :user, :proposal
 
-  def initialize(user, proposal)
+  def initialize(user, record)
     raise Pundit::NotAuthorizedError, "must be logged in" unless user
     @user = user
-    @proposal = proposal.is_a?(Class) ? nil : proposal
+    @proposal = record.is_a?(Class) ? nil : record
   end
 
-  # =============== Actions for Freelancers ===============
+  # ==== Freelancers ====
   def index?
-    user.freelancer? && !job_has_proposal?
+    user.freelancer? && proposal&.job&.proposals&.exists?(user_id: user.id) == false
   end
+  alias_method :create?, :index?
 
-  def new?
-    index?
-  end
-
-  def create?
-    index?
-  end
-
-  # =============== Actions for Clients ===============
+  # ==== Clients ====
   def job_proposals?
     user.client? && proposal&.job&.user == user
   end
@@ -30,50 +23,32 @@ class ProposalPolicy
   end
 
   def accept?
-    can_manage_pending_proposal?
+    manage_pending?
   end
+  alias_method :reject? ,:accept?
 
-  def reject?
-    can_manage_pending_proposal?
-  end
-
+  # ==== Freelancers ====
   def my_proposals?
     user.freelancer?
   end
 
-  # =============== Policy Scope ===============
+  # ==== Policy Scope ====
   class Scope
-    attr_reader :user, :scope
-
     def initialize(user, scope)
       raise Pundit::NotAuthorizedError, "must be logged in" unless user
-      @user = user
-      @scope = scope
+      @user, @scope = user, scope
     end
 
     def resolve
-      if user.client?
-        scope.joins(:job).where(jobs: { user_id: user.id })
-      elsif user.freelancer?
-        scope.where(user_id: user.id)
-      else
-        scope.none
-      end
+      return @scope.joins(:job).where(jobs: { user_id: @user.id }) if @user.client?
+      return @scope.where(user_id: @user.id) if @user.freelancer?
+      @scope.none
     end
   end
 
   private
 
-  
-
-  def job_has_proposal?
-    proposal.present? && proposal.job.proposals.exists?(user_id: user.id)
-  end
-
-  def can_manage_pending_proposal?
-    user.client? && proposal.present? &&
-      proposal.job.present? &&
-      proposal.job.user == user &&
-      proposal.pending?
+  def manage_pending?
+    user.client? && proposal&.job&.user == user && proposal&.pending?
   end
 end

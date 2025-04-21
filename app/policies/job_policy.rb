@@ -7,69 +7,58 @@ class JobPolicy < ApplicationPolicy
   end
 
   def show?
-    # Anyone can view a job (including guests)
     true
   end
 
   def create?
-    # Only authenticated users with client role can create jobs
-    user.present? && user.client?
+    user&.client?
   end
   alias_method :new?, :create?
 
   def edit?
-    # Only job owner with client role can edit
-    user.present? && user.client? && owner?
+    user&.client? && owner?
   end
   alias_method :update?, :edit?
   alias_method :destroy?, :edit?
 
   def index?
-    # Freelancers can view job listings, clients can view their own jobs
-    user.present? && (user.freelancer? || user.client?)
+    user&.freelancer? || user&.client?
   end
 
   def my_jobs?
-    user.freelancer?  # Only freelancers can access their accepted jobs
+    user&.freelancer?
   end
 
   def freelancer_complete?
     job.can_freelancer_complete?(user)
   end
 
-  
-  
   def approve_completion?
-    user.client? && job.user == user && job.freelancer_completed?
+    client_owner? && job.freelancer_completed?
   end
-  
-  def reject_completion?
-    user.client? && job.user == user && job.freelancer_completed?
-  end
+  alias_method :reject_completion?, :approve_completion?
+
   def client_accepted?
-    # Only clients can access this action
-    user.client?
+    user&.client?
   end
-  
+
   class Scope < Scope
     def resolve
-      if user.client?
-        # Clients can only see their own jobs
-        scope.where(user: user)
-      elsif user.freelancer?
-        # Freelancers see jobs where they have accepted proposals
-        scope.joins(:proposals)
-             .where(proposals: { user_id: user.id, status: 'accepted' })
-             .distinct
-      else
-        scope.none
-      end
+      return scope.none unless user
+
+      user.client? ? scope.where(user: user) :
+      user.freelancer? ? scope.joins(:proposals).where(proposals: { user_id: user.id, status: 'accepted' }).distinct :
+      scope.none
     end
   end
-  
+
   private
 
   def owner?
     job.user == user
+  end
+
+  def client_owner?
+    user&.client? && owner?
   end
 end

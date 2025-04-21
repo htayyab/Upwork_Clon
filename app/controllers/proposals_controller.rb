@@ -12,7 +12,6 @@ class ProposalsController < ApplicationController
   def create
     @proposal = @job.proposals.new(proposal_params.merge(user: current_user))
     authorize @proposal
-
     if @proposal.save
       redirect_to search_path, notice: 'Proposal submitted successfully!'
     else
@@ -21,9 +20,8 @@ class ProposalsController < ApplicationController
     end
   end
 
-  # on Client side Clients show all proposals on their jobs created 
   def job_proposals
-    dummy_proposal = @job.proposals.first || @job.proposals.new(job: @job)
+    dummy_proposal = @job.proposals.first || @job.proposals.new
     authorize dummy_proposal, :job_proposals?
     @proposals = policy_scope(@job.proposals).includes(:user)
   end
@@ -33,29 +31,21 @@ class ProposalsController < ApplicationController
     @jobs = current_user.jobs.includes(proposals: :user)
   end
 
-  #freelancer shows all applied proposal accepetd ,rejected and pending
   def my_proposals
     authorize Proposal, :my_proposals?
     @proposals = current_user.proposals.includes(:job)
   end
 
   def accept
-    if @proposal.pending?
-      @proposal.update(status: 'accepted', hold_amount: @proposal.offer_amount)
-      @proposal.job.update(status: 1)
-      @client = @proposal.job.user
-      @client.update(balance: @client.balance - @proposal.offer_amount)
+    if @proposal.accept!
       redirect_to client_proposals_proposals_path, notice: 'Proposal accepted successfully!'
     else
       redirect_to client_proposals_proposals_path, alert: 'Only pending proposals can be accepted'
     end
   end
-  
-  
 
   def reject
-    if @proposal.pending?
-      @proposal.update(status: 'rejected')
+    if @proposal.reject!
       redirect_to client_proposals_proposals_path, notice: 'Proposal rejected successfully!'
     else
       redirect_to client_proposals_proposals_path, alert: 'Only pending proposals can be rejected'
