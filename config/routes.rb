@@ -1,16 +1,13 @@
 Rails.application.routes.draw do
   
-
   #route for freelancer display all proposals send 
   get 'my_proposals', to: 'proposals#my_proposals'
-
   # Show freelancer's accepted jobs 
   get 'freelancer_accepted_jobs', to: 'jobs#freelancer_accepted_jobs'
-
   # show all accepetd jobs list for client side 
   get 'client_accepted_jobs', to: 'jobs#client_accepted_jobs'
 
-
+  #Jobs Controller Routes 
   resources :jobs do
     member do
       patch :approve_completion  # PATCH /jobs/:id/approve_completion
@@ -19,32 +16,26 @@ Rails.application.routes.draw do
     end
   end
 
-  #Accept or Reject the Proposal options for client 
-  resources :proposals, only: [] do
+  #Proposals Controller All routes 
+  resources :proposals do
     member do
-      patch :accept
-      patch :reject
+      patch :accept     # PATCH /proposals/:id/accept
+      patch :reject     # PATCH /proposals/:id/reject
     end
-  end
-
-  #clients see all proposals on their own specific job 
-  resources :proposals, only: [] do
+  
     collection do
-      get 'client_proposals' 
+      get :client_proposals  # GET /proposals/client_proposals
     end
   end
+  resources :jobs do
+    resources :proposals, only: [:index, :create]
+  end
+  
 
-
+  #Jobs Search Controller Routes
   get 'search', to: 'search#index'       # Displays the search form
   post 'search', to: 'search#results'    # Processes the search (or you could use get if you pref
   
-
-  # Job routes for client (CRUD)
-  resources :jobs
-
-   # Static/custom pages
-   get "registration_options", to: "home#registration_options", as: :registration_options
-
   # Devise routes for user authentication
   devise_for :users, controllers: {
     sessions: 'users/sessions',
@@ -59,5 +50,8 @@ Rails.application.routes.draw do
     get    'update',   to: 'users/registrations#edit',  as: :update_user
   end
 
+  # route for role selection page 
+  get "registration_options", to: "home#registration_options", as: :registration_options
+  #home page route
   root "home#index"
 end
