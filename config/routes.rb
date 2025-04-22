@@ -14,6 +14,7 @@ Rails.application.routes.draw do
       patch :reject_completion   # PATCH /jobs/:id/reject_completion
       patch :freelancer_complete  # PATCH /jobs/:id/freelancer_complete
     end
+    resources :proposals, only: [:index, :create]  # nested under jobs
   end
 
   #Proposals Controller All routes 
@@ -27,9 +28,7 @@ Rails.application.routes.draw do
       get :client_proposals  # GET /proposals/client_proposals
     end
   end
-  resources :jobs do
-    resources :proposals, only: [:index, :create]
-  end
+
   
 
   #Jobs Search Controller Routes
