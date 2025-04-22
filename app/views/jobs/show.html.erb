@@ -17,7 +17,7 @@
                   <%= time_ago_in_words(@job.created_at) %> ago
                   <% if current_user.freelancer? %>
                     <span class="mx-2">•</span>
-                    <span class="badge bg-<%= display_status(@job.status) %>">
+                    <span class="badge bg- <%= display_status(@job.status) %>
                       <%= @job.status.humanize %>
                     </span>
                   <% end %>

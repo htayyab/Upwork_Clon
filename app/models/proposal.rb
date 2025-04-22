@@ -3,12 +3,8 @@ class Proposal < ApplicationRecord
   belongs_to :job
   belongs_to :user  # Direct association with User model
 
-  enum :status, {
-    pending: 'pending',
-    accepted: 'accepted',
-    rejected: 'rejected'
-  }
-  
+  enum :status, { pending: 'pending', accepted: 'accepted', rejected: 'rejected' }
+  #Server Side Validations 
   validates :user_id, :job_id,:status, :offer_amount, :cover_letter, :estimated_time, presence: true
   validates :offer_amount, numericality: { greater_than: 0 }
   validates :cover_letter, length: { minimum: 20, maximum: 200 }
@@ -35,8 +31,7 @@ class Proposal < ApplicationRecord
   end
 
   def reject!
-    return false unless pending?
-    update(status: :rejected)
+    pending? && update(status: :rejected)
   end
 
   private

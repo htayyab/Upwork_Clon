@@ -4,6 +4,8 @@
   <% if @jobs.any? %>
     <div class="row">
       <% @jobs.each do |job| %>
+        <% next unless job.open? %> <!-- ✅ Only show if job is open -->
+
         <div class="col-lg-8 mx-auto mb-4">
           <div class="card shadow-sm border-0">
             <div class="card-header bg-primary text-white rounded-top">
@@ -17,7 +19,7 @@
                 </span>
               </div>
             </div>
-            
+
             <div class="card-body">
               <% if job.proposals.any? %>
                 <div class="accordion" id="proposalsAccordion<%= job.id %>">
@@ -43,7 +45,7 @@
                           </div>
                         </button>
                       </h3>
-                      
+
                       <div id="collapse<%= job.id %>_<%= index %>" 
                            class="accordion-collapse collapse <%= index == 0 ? 'show' : '' %>" 
                            aria-labelledby="heading<%= job.id %>_<%= index %>" 
@@ -55,7 +57,7 @@
                               <%= simple_format(proposal.cover_letter) %>
                             </div>
                           </div>
-                          
+
                           <div class="row">
                             <div class="col-md-6 mb-3">
                               <h6 class="text-primary">Offer Details</h6>
@@ -70,7 +72,7 @@
                                 </li>
                               </ul>
                             </div>
-                            
+
                             <% if proposal.attachments.attached? %>
                               <div class="col-md-6">
                                 <h6 class="text-primary">Attachments</h6>
@@ -91,7 +93,7 @@
                               </div>
                             <% end %>
                           </div>
-                          
+
                           <% if proposal.pending? %>
                             <div class="mt-3 d-flex justify-content-end">
                               <%= button_to reject_proposal_path(proposal),
@@ -100,7 +102,7 @@
                                   data: { confirm: "Are you sure you want to reject this proposal?" } do %>
                                 <i class="fas fa-times me-1"></i> Reject
                               <% end %>
-                              
+
                               <%= button_to accept_proposal_path(proposal),
                                   method: :patch,
                                   class: "btn btn-primary",
@@ -128,7 +130,7 @@
                 </div>
               <% end %>
             </div>
-            
+
             <div class="card-footer bg-light d-flex justify-content-between">
               <small class="text-muted">Posted <%= time_ago_in_words(job.created_at) %> ago</small>
               <small><%= link_to "View Job Details", job_path(job), class: "text-primary" %></small>
@@ -147,4 +149,3 @@
     </div>
   <% end %>
 </div>
-

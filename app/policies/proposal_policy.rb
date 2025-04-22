@@ -13,7 +13,7 @@ class ProposalPolicy
   end
   alias_method :create?, :index?
 
-  # ==== Clients ====
+  # ==== Clients view all proposls on their jobs====
   def job_proposals?
     user.client? && proposal&.job&.user == user
   end
@@ -27,12 +27,16 @@ class ProposalPolicy
   end
   alias_method :reject? ,:accept?
 
-  # ==== Freelancers ====
+  # ==== Freelancers view their submitted Proposlas ====
   def my_proposals?
     user.freelancer?
   end
 
-  # ==== Policy Scope ====
+  
+  
+  private
+
+# ==== Policy Scope ====
   class Scope
     def initialize(user, scope)
       raise Pundit::NotAuthorizedError, "must be logged in" unless user
@@ -45,8 +49,6 @@ class ProposalPolicy
       @scope.none
     end
   end
-
-  private
 
   def manage_pending?
     user.client? && proposal&.job&.user == user && proposal&.pending?

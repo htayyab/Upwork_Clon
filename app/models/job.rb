@@ -1,14 +1,15 @@
 class Job < ApplicationRecord
   belongs_to :user
   belongs_to :category
-  has_many :proposals
+  has_many :proposals, dependent: :destroy
 
   enum :status, {
     open: 0,
     closed: 1,
     freelancer_completed: 2,
     client_completed: 3,
-    completed: 4
+    completed: 4,
+    archived: 5 # ✅ Added for logical deletion
   }
 
   enum :complexity, { low: 0, medium: 1, high: 2 }
@@ -90,6 +91,10 @@ class Job < ApplicationRecord
   end
 
   # ========== Scopes for clean queries ==========
+
+  # ✅ Scope to exclude archived jobs (for public-facing listings)
+  scope :active, -> { where.not(status: :archived) }
+
   scope :client_accepted_by, ->(user) {
     joins(:proposals)
       .where(user: user, proposals: { status: 'accepted' })
@@ -107,9 +112,7 @@ class Job < ApplicationRecord
     end
   }
 
-
   #searching business logic used in search controller 
-
   def self.search_by(query, filter)
     query = query.to_s.strip.downcase
     return none if query.blank?
@@ -159,5 +162,4 @@ class Job < ApplicationRecord
     values = skills.map { |s| "%\"#{s}\"%" }
     where(conditions, *values)
   end
-
 end

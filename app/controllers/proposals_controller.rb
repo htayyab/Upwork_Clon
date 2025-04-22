@@ -1,17 +1,16 @@
 class ProposalsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_job, only: [:index, :create, :job_proposals]
-  before_action :set_proposal, only: [:accept, :reject]
-  before_action :authorize_proposal, only: [:accept, :reject]
+  before_action :set_job, only: %i[index create ]
+  before_action :set_proposal, only: %i[accept reject]
+  before_action :authorize_proposal, only: %i[accept reject]
 
+  
   def index
-    @proposal = @job.proposals.new
-    authorize @proposal
+    @proposal = authorize @job.proposals.new
   end
 
   def create
-    @proposal = @job.proposals.new(proposal_params.merge(user: current_user))
-    authorize @proposal
+    @proposal = authorize @job.proposals.new(proposal_params.merge(user: current_user))
     if @proposal.save
       redirect_to search_path, notice: 'Proposal submitted successfully!'
     else
@@ -20,36 +19,25 @@ class ProposalsController < ApplicationController
     end
   end
 
-  def job_proposals
-    dummy_proposal = @job.proposals.first || @job.proposals.new
-    authorize dummy_proposal, :job_proposals?
-    @proposals = policy_scope(@job.proposals).includes(:user)
-  end
 
+  #clients see all proposals on their own specific job 
   def client_proposals
     authorize Proposal, :client_proposals?
     @jobs = current_user.jobs.includes(proposals: :user)
   end
 
+  #freelancers see all proposels they send on all jobs 
   def my_proposals
     authorize Proposal, :my_proposals?
     @proposals = current_user.proposals.includes(:job)
   end
 
   def accept
-    if @proposal.accept!
-      redirect_to client_proposals_proposals_path, notice: 'Proposal accepted successfully!'
-    else
-      redirect_to client_proposals_proposals_path, alert: 'Only pending proposals can be accepted'
-    end
+    process_decision(@proposal.accept!, 'accepted')
   end
 
   def reject
-    if @proposal.reject!
-      redirect_to client_proposals_proposals_path, notice: 'Proposal rejected successfully!'
-    else
-      redirect_to client_proposals_proposals_path, alert: 'Only pending proposals can be rejected'
-    end
+    process_decision(@proposal.reject!, 'rejected')
   end
 
   private
@@ -69,11 +57,12 @@ class ProposalsController < ApplicationController
   end
 
   def proposal_params
-    params.require(:proposal).permit(
-      :offer_amount,
-      :cover_letter,
-      :estimated_time,
-      attachments: []
-    )
+    params.require(:proposal).permit(:offer_amount,:cover_letter,:estimated_time,attachments: [])
+  end
+
+  def process_decision(success, action)
+    path = client_proposals_proposals_path
+    notice = success ? "Proposal #{action} successfully!" : "Only pending proposals can be #{action}"
+    redirect_to path, (success ? { notice: } : { alert: notice })
   end
 end

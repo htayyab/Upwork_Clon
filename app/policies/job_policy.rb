@@ -7,7 +7,7 @@ class JobPolicy < ApplicationPolicy
   end
 
   def show?
-    true
+    !job.archived?
   end
 
   def create?
@@ -46,9 +46,17 @@ class JobPolicy < ApplicationPolicy
     def resolve
       return scope.none unless user
 
-      user.client? ? scope.where(user: user) :
-      user.freelancer? ? scope.joins(:proposals).where(proposals: { user_id: user.id, status: 'accepted' }).distinct :
-      scope.none
+      if user.client?
+        # Client can see all their jobs except archived
+        scope.where(user: user).where.not(status: :archived)
+      elsif user.freelancer?
+        # Freelancers see accepted jobs, even if archived
+        scope.joins(:proposals)
+             .where(proposals: { user_id: user.id, status: 'accepted' })
+             .distinct
+      else
+        scope.none
+      end
     end
   end
 

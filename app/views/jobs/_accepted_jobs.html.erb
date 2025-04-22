@@ -2,8 +2,10 @@
   <div class="row justify-content-center">
     <div class="col-lg-10">
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">My Hired Jobs</h2>
-        <%= link_to 'Back to Jobs', jobs_path, class: 'btn btn-outline-secondary' %>
+        <h2 class="mb-0">
+          <%= role == "client" ? "My Hired Jobs" : "My Accepted Jobs" %>
+        </h2>
+        <%= link_to 'Back to Jobs', (role == "client" ? jobs_path : root_path), class: 'btn btn-outline-secondary' %>
       </div>
 
       <% if @jobs.any? %>
@@ -13,9 +15,11 @@
               <thead class="table-light">
                 <tr>
                   <th class="ps-4">Job Title</th>
-                  <th>Freelancer</th>
+                  <th><%= role == "client" ? "Freelancer" : "Client" %></th>
                   <th>Status</th>
-                  <th>Offer Amount</th>
+                  <% if role == "client" %>
+                    <th>Offer Amount</th>
+                  <% end %>
                   <th class="text-end pe-4">Actions</th>
                 </tr>
               </thead>
@@ -28,33 +32,23 @@
                     </td>
                     <td>
                       <span class="badge bg-info">
-                        <%= proposal.user.first_name %>
+                        <%= role == "client" ? proposal.user.first_name : job.user.first_name %>
                       </span>
                     </td>
                     <td>
-                      <% if job.open? %>
-                        <span class="badge bg-primary">
-                          <i class="bi bi-unlock me-1"></i> Open
-                        </span>
-                      <% elsif job.closed? %>
-                        <span class="badge bg-warning text-dark">
-                          <i class="bi bi-lock me-1"></i> In Progress
-                        </span>
-                      <% elsif job.freelancer_completed? %>
-                        <span class="badge bg-info">
-                          <i class="bi bi-hourglass me-1"></i> Awaiting Approval
-                        </span>
-                      <% elsif job.completed? %>
-                        <span class="badge bg-success">
-                          <i class="bi bi-check-circle me-1"></i> Completed
-                        </span>
-                      <% end %>
+                      <%= display_status(job.status || job.state || job.job_status) %>
                     </td>
-                    <td>
-                      <%= number_to_currency(proposal.offer_amount) %>
-                    </td>
+                    <% if role == "client" %>
+                      <td>
+                        <%= format_budget(proposal.offer_amount) if proposal %>
+                      </td>
+                    <% end %>
                     <td class="text-end pe-4">
-                      <% if job.freelancer_completed? %>
+                      <% if job.archived? %>
+                        <span class="text-muted">
+                          <i class="bi bi-archive me-1"></i> Archived
+                        </span>
+                      <% elsif role == "client" && job.freelancer_completed? %>
                         <div class="btn-group" role="group">
                           <%= button_to approve_completion_job_path(job), 
                               method: :patch,
@@ -63,7 +57,7 @@
                               data: { confirm: 'Approve this work and release payment?' } do %>
                             <i class="bi bi-check-circle me-1"></i> Approve
                           <% end %>
-                          
+
                           <%= button_to reject_completion_job_path(job),
                               method: :patch,
                               form: { data: { turbo: false } },
@@ -72,12 +66,20 @@
                             <i class="bi bi-x-circle me-1"></i> Reject
                           <% end %>
                         </div>
+                      <% elsif role == "freelancer" && job.closed? %>
+                        <%= button_to freelancer_complete_job_path(job),
+                            method: :patch,
+                            form: { data: { turbo: false } },
+                            class: 'btn btn-sm btn-success',
+                            data: { confirm: 'Mark this job as completed?' } do %>
+                          <i class="bi bi-check-circle me-1"></i> Mark as Completed
+                        <% end %>
                       <% elsif job.completed? %>
                         <span class="text-muted">
                           <i class="bi bi-check2-all me-1"></i> Completed
                         </span>
                       <% else %>
-                        <span class="text-muted">Awaiting freelancer</span>
+                        <span class="text-muted">N/A</span>
                       <% end %>
                     </td>
                   </tr>
@@ -90,9 +92,13 @@
         <div class="card shadow-sm">
           <div class="card-body text-center py-5">
             <i class="bi bi-briefcase text-muted display-4 mb-3"></i>
-            <h4 class="h5">No Hired Freelancers Yet</h4>
-            <p class="text-muted mb-4">You haven't accepted any proposals yet.</p>
-            <%= link_to 'View Proposals', client_proposals_proposals_path, class: 'btn btn-primary' %>
+            <h4 class="h5"><%= role == "client" ? "No Hired Freelancers Yet" : "No Accepted Jobs Yet" %></h4>
+            <p class="text-muted mb-4">
+              <%= role == "client" ? "You haven't accepted any proposals yet." : "You haven't been accepted for any jobs yet. Keep applying!" %>
+            </p>
+            <%= link_to (role == "client" ? 'View Proposals' : 'Browse Jobs'),
+                (role == "client" ? client_proposals_proposals_path : search_path),
+                class: 'btn btn-primary' %>
           </div>
         </div>
       <% end %>

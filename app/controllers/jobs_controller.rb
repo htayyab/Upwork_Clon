@@ -1,7 +1,9 @@
 class JobsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_job, only: %i[show edit update destroy freelancer_complete approve_completion reject_completion]
-  before_action :authorize_job, only: %i[ show edit update destroy]
+  before_action :authorize_job, only: %i[show edit update destroy]
+  before_action :prevent_modification_if_in_progress, only: %i[edit update destroy]
+  before_action :prevent_editing_if_completed, only: %i[edit update]
   after_action :verify_authorized, except: :index
   after_action :verify_policy_scoped, only: :index
 
@@ -22,8 +24,7 @@ class JobsController < ApplicationController
     authorize @job
   end
 
-  def edit
-  end
+  def edit; end
 
   def create
     @job = current_user.jobs.new(job_params)
@@ -45,20 +46,23 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    @job.destroy
-    redirect_to jobs_url, notice: "Job was successfully destroyed."
+    if @job.update(status: :archived) # ✅ Archive instead of destroy
+      redirect_to jobs_url, notice: "Job was archived successfully."
+    else
+      redirect_to @job, alert: "Failed to archive the job."
+    end
   end
 
   def client_accepted_jobs
     authorize Job, :client_accepted?
     @jobs = Job.client_accepted_by(current_user)
   end
-  
+
   def freelancer_accepted_jobs
     authorize :job, :my_jobs?
     @jobs = Job.freelancer_accepted_for(current_user)
   end
-  
+
   def freelancer_complete
     authorize @job, :freelancer_complete?
 
@@ -95,12 +99,21 @@ class JobsController < ApplicationController
 
   def set_job
     @job = Job.find(params[:id])
-  rescue ActiveRecord::RecordNotFound
-    flash[:alert] = "Job not found or you don't have permission to access it"
-    redirect_to jobs_path
   end
 
   def job_params
     params.require(:job).permit(:title, :description, :budget, :category_id, :complexity, skills: [])
+  end
+
+  def prevent_editing_if_completed
+    if @job.completed?
+      redirect_to @job, alert: "Completed jobs cannot be modified."
+    end
+  end
+
+  def prevent_modification_if_in_progress
+    if @job.proposals.accepted.exists? && !@job.completed?
+      redirect_to @job, alert: "You can't modify or delete a job that is currently in progress."
+    end
   end
 end
