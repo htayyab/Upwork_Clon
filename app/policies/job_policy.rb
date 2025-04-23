@@ -22,7 +22,7 @@ class JobPolicy < ApplicationPolicy
   alias_method :destroy?, :edit?
 
   def index?
-    user&.freelancer? || user&.client?
+    user&.client?
   end
 
   def my_jobs?
@@ -42,23 +42,7 @@ class JobPolicy < ApplicationPolicy
     user&.client?
   end
 
-  class Scope < Scope
-    def resolve
-      return scope.none unless user
-
-      if user.client?
-        # Client can see all their jobs except archived
-        scope.where(user: user).where.not(status: :archived)
-      elsif user.freelancer?
-        # Freelancers see accepted jobs, even if archived
-        scope.joins(:proposals)
-             .where(proposals: { user_id: user.id, status: 'accepted' })
-             .distinct
-      else
-        scope.none
-      end
-    end
-  end
+  
 
   private
 

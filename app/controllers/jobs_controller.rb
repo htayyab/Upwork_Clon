@@ -5,25 +5,23 @@ class JobsController < ApplicationController
   before_action :prevent_modification_if_in_progress, only: %i[edit update destroy]
   before_action :prevent_editing_if_completed, only: %i[edit update]
   after_action :verify_authorized, except: :index
-  after_action :verify_policy_scoped, only: :index
+
 
   def index
-    @jobs = policy_scope(Job).order(created_at: :desc)
+    @jobs = Job.all_jobs_excluded_archived(current_user)
     authorize @jobs
   end
 
   def show
-    if current_user&.freelancer?
       @already_applied = @job.applied_by?(current_user)
       @user_proposal = @job.user_proposal(current_user) if @already_applied
-    end
   end
 
   def new
     @job = current_user.jobs.new
     authorize @job
   end
-
+  
   def edit; end
 
   def create
@@ -55,12 +53,16 @@ class JobsController < ApplicationController
 
   def client_accepted_jobs
     authorize Job, :client_accepted?
-    @jobs = Job.client_accepted_by(current_user)
+    @jobs = Job.accepted_jobs(current_user)
   end
 
   def freelancer_accepted_jobs
     authorize :job, :my_jobs?
-    @jobs = Job.freelancer_accepted_for(current_user)
+    start_time = Time.now
+    @jobs = Job.accepted_jobs(current_user)
+    end_time = Time.now
+    execution_time_ms = (end_time - start_time) * 1000
+    puts "Execution time: #{execution_time_ms.round(2)} ms"
   end
 
   def freelancer_complete

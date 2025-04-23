@@ -4,11 +4,6 @@ class SearchController < ApplicationController
   def index
     @query = params[:query].to_s.strip
     @filter = params[:filter] || 'title'
-
-    @jobs = if @query.present?
-               Job.search_by(@query, @filter)
-             else
-               Job.all.order(created_at: :desc)
-             end
+    @jobs = Job.search_by(@query, @filter)
   end
 end

@@ -30,7 +30,6 @@ Rails.application.routes.draw do
   end
 
   
-
   #Jobs Search Controller Routes
   get 'search', to: 'search#index'       # Displays the search form
   post 'search', to: 'search#results'    # Processes the search (or you could use get if you pref

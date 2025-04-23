@@ -14,11 +14,12 @@ categories = [
   "Content Writing",
   "Digital Marketing",
   "Data Science",
-  "Customer Support"
+  "Customer Support",
+  "jfgj"
 ]
 
 categories.each do |name|
-  Category.create!(name: name)
+  Category.find_or_create_by!(name: name)
 end
 
 puts "✅ Seeded #{Category.count} categories!"

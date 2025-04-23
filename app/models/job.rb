@@ -38,11 +38,12 @@ class Job < ApplicationRecord
   # ========== Proposal-related helpers ==========
 
   #check the user is freelancer and check the freelancer is already applied for job
+  
   def applied_by?(user)
     return false unless user.freelancer?
     proposals.exists?(user_id: user.id)
   end
-
+  
   # fetch all the proposals submited by freelancer
   def user_proposal(user)
     proposals.find_by(user_id: user.id)
@@ -83,6 +84,8 @@ class Job < ApplicationRecord
 
   private
 
+  
+
   def release_payment
     accepted_proposal&.then do |proposal|
       proposal.user.increment!(:balance, proposal.offer_amount * 0.8)
@@ -90,76 +93,84 @@ class Job < ApplicationRecord
     end
   end
 
-  # ========== Scopes for clean queries ==========
 
-  # ✅ Scope to exclude archived jobs (for public-facing listings)
-  scope :active, -> { where.not(status: :archived) }
+  # Scope to exclude archived jobs (for public-facing listings)
+  def self.all_jobs_excluded_archived(user)
+    where(user_id: user.id).where.not(status: :archived).order(created_at: :desc)
+  end
 
-  scope :client_accepted_by, ->(user) {
-    joins(:proposals)
-      .where(user: user, proposals: { status: 'accepted' })
-      .distinct
-      .includes(:proposals, :user)
-  }
-
-  scope :freelancer_accepted_for, ->(user) {
+  # show list of Accepted jobs for client and freelancer 
+  def self.accepted_jobs(user)
     if user.client?
-      where(user: user).includes(:user, :proposals)
+      Job.includes(:proposals).where(id: Proposal.where(status: :accepted).select(:job_id))
+        .where(user_id: user.id)
     else
-      joins(:proposals)
-        .where(proposals: { user_id: user.id, status: 'accepted' })
-        .includes(:user, :proposals)
+      Job.includes(:proposals).where(id: Proposal.where(user_id: user.id, status: :accepted ).select(:job_id))    
     end
-  }
+  end
+
+
 
   #searching business logic used in search controller 
-  def self.search_by(query, filter)
+  def self.search_by(query, filter = 'title')
     query = query.to_s.strip.downcase
-    return none if query.blank?
-
+    jobs = where(status: :open )  # Always restrict to open jobs unless explicitly overridden
+  
+    return jobs.order(created_at: :desc) if query.blank?
+  
     case filter
     when 'title'
-      where('LOWER(title) LIKE ?', "%#{query}%")
+      jobs = jobs.where('LOWER(title) LIKE ?', "%#{query}%")
     when 'budget'
-      search_by_budget(query)
+      jobs = search_by_budget(query, jobs)
     when 'category'
-      joins(:category).where('LOWER(categories.name) LIKE ?', "%#{query}%")
+      jobs = search_by_category(query, jobs)
     when 'skills'
-      search_by_skills(query)
+      jobs = search_by_skills(query, jobs)
     else
-      none
-    end.order(created_at: :desc).limit(50)
-  end
-
-  def self.search_by_budget(query)
-    num = query.gsub(/[^\d.]/, '').to_f
-    return none if num.zero?
-
-    return where('budget >= ?', num) if query !~ /[<>=]|\.\./
-
-    case query
-    when /^>=/
-      where('budget >= ?', num)
-    when /^<=/
-      where('budget <= ?', num)
-    when /^>/
-      where('budget > ?', num)
-    when /^</
-      where('budget < ?', num)
-    when /../
-      min, max = query.split('..').map { |n| n.gsub(/[^\d.]/, '').to_f }
-      where(budget: min..max)
-    else
-      where('budget >= ?', num)
+      none  # Invalid filter
     end
+  
+    jobs.order(created_at: :desc).limit(50)
+  end
+  
+  # 'search_by_budget' method
+  def self.search_by_budget(query, jobs)
+    num = query.gsub(/[^\d.]/, '').to_f
+    return jobs.none if num.zero?
+  
+    # Apply budget filter
+    if query.include?('..')
+      min, max = query.split('..').map { |n| n.gsub(/[^\d.]/, '').to_f }
+      jobs = jobs.where(budget: min..max)
+    else
+      jobs = jobs.where('budget >= ?', num)
+    end
+    jobs
+  end
+  
+  # 'search_by_category' method (assuming `categories` is a related model)
+  def self.search_by_category(query, jobs)
+    return jobs if query.blank?
+    categories = Category.where('LOWER(name) LIKE ?', "%#{query.downcase}%").pluck(:id)
+    jobs = jobs.where(category_id: categories) unless categories.empty?
+    jobs
+  end
+  
+  # 'search_by_skills' method (assuming skills are stored in a serialized array)
+  def self.search_by_skills(query, jobs)
+    skills = query.split(',').map(&:strip).reject(&:blank?).map(&:downcase)
+    return jobs if skills.empty?
+  
+    filtered = jobs.to_a.select do |job|
+      job_skills = job.skills.map(&:to_s).map(&:strip).reject(&:blank?).map(&:downcase)
+      (job_skills & skills).any?
+    end
+    jobs.where(id: filtered)
   end
 
-  def self.search_by_skills(query)
-    skills = query.split(',').map(&:strip).reject(&:blank?)
-    return none if skills.empty?
-
-    conditions = skills.map { "LOWER(jobs.skills) LIKE ?" }.join(' OR ')
-    values = skills.map { |s| "%\"#{s}\"%" }
-    where(conditions, *values)
-  end
 end
+
+
+
+
