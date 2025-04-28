@@ -1,4 +1,19 @@
 Rails.application.routes.draw do
+
+  # Devise routes for user authentication
+  devise_for :users, controllers: {
+    sessions: 'users/sessions',
+    registrations: 'users/registrations'
+  }
+
+  # Custom Devise routes (friendly URLs)
+  devise_scope :user do
+    get    'login',    to: 'users/sessions#new',        as: :login_user
+    delete 'logout',   to: 'users/sessions#destroy',    as: :logout_user
+    get    'register', to: 'users/registrations#new',   as: :signup_user
+    get    'update',   to: 'users/registrations#edit',  as: :update_user
+  end
+
   
   #route for freelancer display all proposals send 
   get 'my_proposals', to: 'proposals#my_proposals'
@@ -34,20 +49,7 @@ Rails.application.routes.draw do
   get 'search', to: 'search#index'       # Displays the search form
   post 'search', to: 'search#results'    # Processes the search (or you could use get if you pref
   
-  # Devise routes for user authentication
-  devise_for :users, controllers: {
-    sessions: 'users/sessions',
-    registrations: 'users/registrations'
-  }
-
-  # Custom Devise routes (friendly URLs)
-  devise_scope :user do
-    get    'login',    to: 'users/sessions#new',        as: :login_user
-    delete 'logout',   to: 'users/sessions#destroy',    as: :logout_user
-    get    'register', to: 'users/registrations#new',   as: :signup_user
-    get    'update',   to: 'users/registrations#edit',  as: :update_user
-  end
-
+  
   # route for role selection page 
   get "registration_options", to: "home#registration_options", as: :registration_options
   #home page route

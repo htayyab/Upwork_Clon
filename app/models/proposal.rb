@@ -12,7 +12,6 @@ class Proposal < ApplicationRecord
     with: /\A\d+\s+(day|days|week|weeks|month|months|year|years)\z/i,
     message: "must be in format like '1 week', '2 months', etc."
   }
-  validate :user_is_freelancer
 
   # === Business Logic ===
 
@@ -33,10 +32,5 @@ class Proposal < ApplicationRecord
   def reject!
     pending? && update(status: :rejected)
   end
-
-  private
-
-  def user_is_freelancer
-    errors.add(:user, "must be a freelancer") unless user&.freelancer?
-  end
+  
 end

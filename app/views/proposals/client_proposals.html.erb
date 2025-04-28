@@ -34,7 +34,7 @@
                                 aria-controls="collapse<%= job.id %>_<%= index %>">
                           <div class="d-flex w-100 justify-content-between align-items-center">
                             <div>
-                              <span class="fw-bold"><%= proposal.user.first_name || proposal.user.email %></span>
+                              <span class="fw-bold"><%= proposal.user.first_name %></span>
                               <span class="badge ms-2 <%= status_badge_class(proposal.status) %>">
                                 <%= proposal.status.humanize %>
                               </span>
@@ -68,7 +68,7 @@
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                   Estimated Time
-                                  <span class="badge bg-info rounded-pill"><%= proposal.estimated_time %> days</span>
+                                  <span class="badge bg-info rounded-pill"><%= proposal.estimated_time %></span>
                                 </li>
                               </ul>
                             </div>

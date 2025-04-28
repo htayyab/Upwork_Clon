@@ -15,7 +15,7 @@ class ProposalsController < ApplicationController
       redirect_to search_path, notice: 'Proposal submitted successfully!'
     else
       flash.now[:alert] = @proposal.errors.full_messages.to_sentence
-      render :index, status: :unprocessable_entity
+      redirect_to job_proposals_path, status: :unprocessable_entity
     end
   end
 

@@ -1,15 +1,15 @@
 class ProposalPolicy
   attr_reader :user, :proposal
 
-  def initialize(user, record)
+  def initialize(user, proposal)
     raise Pundit::NotAuthorizedError, "must be logged in" unless user
     @user = user
-    @proposal = record.is_a?(Class) ? nil : record
+    @proposal = proposal
   end
 
   # ==== Freelancers ====
   def index?
-    user.freelancer? && proposal&.job&.proposals&.exists?(user_id: user.id) == false
+    user.freelancer? && !proposal&.job&.proposals&.exists?(user_id: user.id)
   end
   alias_method :create?, :index?
 
@@ -31,26 +31,11 @@ class ProposalPolicy
   def my_proposals?
     user.freelancer?
   end
-
-  
   
   private
-
-# ==== Policy Scope ====
-  class Scope
-    def initialize(user, scope)
-      raise Pundit::NotAuthorizedError, "must be logged in" unless user
-      @user, @scope = user, scope
-    end
-
-    def resolve
-      return @scope.joins(:job).where(jobs: { user_id: @user.id }) if @user.client?
-      return @scope.where(user_id: @user.id) if @user.freelancer?
-      @scope.none
-    end
-  end
 
   def manage_pending?
     user.client? && proposal&.job&.user == user && proposal&.pending?
   end
+  
 end

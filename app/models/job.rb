@@ -13,7 +13,6 @@ class Job < ApplicationRecord
   }
 
   enum :complexity, { low: 0, medium: 1, high: 2 }
-
   serialize :skills, coder: JSON
   
   #Server Side Validations on jobs 
@@ -24,7 +23,7 @@ class Job < ApplicationRecord
 
   # ========== Skill handling for forms ==========
   def skills_string
-    skills&.join(', ')
+    skills&.join(',')
   end
 
   def skills_string=(value)
@@ -62,7 +61,7 @@ class Job < ApplicationRecord
 
   def mark_as_freelancer_completed_by(user)
     return false unless can_freelancer_complete?(user)
-    update(status: :freelancer_completed)
+    update!(status: :freelancer_completed)
   end
 
   def approve_completion!
@@ -84,15 +83,12 @@ class Job < ApplicationRecord
 
   private
 
-  
-
   def release_payment
     accepted_proposal&.then do |proposal|
       proposal.user.increment!(:balance, proposal.offer_amount * 0.8)
       proposal.update!(hold_amount: 0)
     end
   end
-
 
   # Scope to exclude archived jobs (for public-facing listings)
   def self.all_jobs_excluded_archived(user)
@@ -102,21 +98,18 @@ class Job < ApplicationRecord
   # show list of Accepted jobs for client and freelancer 
   def self.accepted_jobs(user)
     if user.client?
-      Job.includes(:proposals).where(id: Proposal.where(status: :accepted).select(:job_id))
-        .where(user_id: user.id)
+      Job.includes(:proposals).where(user_id:user.id ,proposals: {status: :accepted})
     else
-      Job.includes(:proposals).where(id: Proposal.where(user_id: user.id, status: :accepted ).select(:job_id))    
+      Job.includes(:proposals).where(proposals: { user_id: user.id, status: :accepted })
     end
   end
-
-
 
   #searching business logic used in search controller 
   def self.search_by(query, filter = 'title')
     query = query.to_s.strip.downcase
-    jobs = where(status: :open )  # Always restrict to open jobs unless explicitly overridden
+    jobs = where(status: :open ).order(created_at: :desc)  # Always restrict to open jobs unless explicitly overridden
   
-    return jobs.order(created_at: :desc) if query.blank?
+    return jobs if query.blank?
   
     case filter
     when 'title'
@@ -131,13 +124,13 @@ class Job < ApplicationRecord
       none  # Invalid filter
     end
   
-    jobs.order(created_at: :desc).limit(50)
+    jobs
   end
   
   # 'search_by_budget' method
   def self.search_by_budget(query, jobs)
     num = query.gsub(/[^\d.]/, '').to_f
-    return jobs.none if num.zero?
+    return none if num.zero?
   
     # Apply budget filter
     if query.include?('..')
@@ -146,27 +139,29 @@ class Job < ApplicationRecord
     else
       jobs = jobs.where('budget >= ?', num)
     end
-    jobs
+    return jobs
   end
   
-  # 'search_by_category' method (assuming `categories` is a related model)
+  # 'search_by_category' method 
   def self.search_by_category(query, jobs)
-    return jobs if query.blank?
+    return none if query.blank?
     categories = Category.where('LOWER(name) LIKE ?', "%#{query.downcase}%").pluck(:id)
-    jobs = jobs.where(category_id: categories) unless categories.empty?
-    jobs
+    return none if categories.empty? 
+  
+    jobs.where(category_id: categories)
   end
+  
   
   # 'search_by_skills' method (assuming skills are stored in a serialized array)
   def self.search_by_skills(query, jobs)
     skills = query.split(',').map(&:strip).reject(&:blank?).map(&:downcase)
-    return jobs if skills.empty?
+    return none if skills.empty?
   
     filtered = jobs.to_a.select do |job|
       job_skills = job.skills.map(&:to_s).map(&:strip).reject(&:blank?).map(&:downcase)
       (job_skills & skills).any?
     end
-    jobs.where(id: filtered)
+    return jobs.where(id: filtered)
   end
 
 end

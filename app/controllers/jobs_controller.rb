@@ -6,7 +6,6 @@ class JobsController < ApplicationController
   before_action :prevent_editing_if_completed, only: %i[edit update]
   after_action :verify_authorized, except: :index
 
-
   def index
     @jobs = Job.all_jobs_excluded_archived(current_user)
     authorize @jobs
